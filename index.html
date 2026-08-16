@@ -63,6 +63,10 @@
 
   header button:hover { background: #eaeaea; }
 
+  /* The syntax dialog is plain text; everything else is the browser's
+     native <dialog> behavior and styling. */
+  #syntax-help { font-family: var(--font-family); font-size: var(--font-size); }
+
   .editor { position: relative; flex: 1; min-height: 0; }
 
   /* The two elements whose metrics must agree for results to line up. */
@@ -115,6 +119,7 @@
     <button id="clear-button" type="button">Clear</button>
     <button id="open-button" type="button">Open…</button>
     <button id="save-button" type="button">Save</button>
+    <button id="syntax-button" type="button">Syntax</button>
     <input id="file-picker" type="file" accept=".md,.txt,.calc,text/plain,text/markdown" hidden>
   </header>
 
@@ -126,6 +131,48 @@
          with a screen reader. -->
     <div id="results" aria-hidden="true"><div id="results-rows"></div></div>
   </main>
+
+  <!-- Native <dialog>: the browser provides open/close, ESC, focus trapping,
+       and a backdrop, and the Close button works with no JS at all via
+       form method="dialog". Every example below is asserted verbatim by the
+       "syntax help examples are truthful" test, so this text cannot drift
+       from real behavior. -->
+  <dialog id="syntax-help">
+    <pre>
+Math lines compute. Anything that doesn't parse is prose.
+
+x = 12          assign a variable; its value shows in grey
+x * 4           any line that parses shows its value
+_ + 1           _  is the previous successful result
+# notes         comments: a whole line, or the end of one
+
++  -  *  /      arithmetic           9 / 2       = 4.5
+//              floor division       9 // 2      = 4
+%               modulo               9 % 2       = 1
+**              exponent (not ^)     2 ** 10     = 1024
+( )             grouping             (1 + 2) * 3 = 9
+
+sqrt(x)         square root          sqrt(81)    = 9
+exp(x)          e to the power x     exp(1)      = 2.71828
+log(x)          natural log (ln)     log(e)      = 1
+log(x, b)       log, base b          log(8, 2)   = 3
+log2 log10      fixed-base logs      log10(1000) = 3
+sin cos tan     radians              cos(pi)     = -1
+asin acos atan  inverses, radians    atan(1)     = 0.785398
+floor ceil      round down / up      ceil(2.1)   = 3
+abs(x)          absolute value       abs(-7)     = 7
+round(x)        nearest, ties even   round(2.5)  = 2
+round(x, d)     d decimal places     round(pi, 2)= 3.14
+factorial(n)                         factorial(5)= 120
+min max         any number of args   max(4, 9, 2)= 9
+
+pi  e  tau      constants            pi          = 3.14159
+
+1/0, sqrt(-1), and overflow show "error"; so does an
+assignment whose right side is broken (total = pricee * 2).
+    </pre>
+    <form method="dialog"><button>Close</button></form>
+  </dialog>
 
   <script type="module" src="app.js"></script>
 </body>

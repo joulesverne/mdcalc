@@ -37,6 +37,27 @@ test('every document yields exactly one result per line', () => {
   }
 });
 
+test('syntax help examples are truthful', () => {
+  // The Syntax dialog in index.html shows worked examples ("2 ** 10 = 1024").
+  // Extract each one and assert the evaluator really produces the shown
+  // answer, so the help text cannot drift from actual behavior. An example
+  // row is any line whose last "=" is followed by a bare number; the
+  // expression is the last multi-space-separated column before that "=".
+  const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const pre = html.match(/<pre>([\s\S]*?)<\/pre>/)[1];
+  let checked = 0;
+  for (const line of pre.split('\n')) {
+    const eq = line.lastIndexOf('=');
+    if (eq === -1) continue;
+    const expected = line.slice(eq + 1).trim();
+    if (!/^-?[\d.]+$/.test(expected)) continue; // '=' inside prose, not an example
+    const expr = line.slice(0, eq).trimEnd().split(/\s{2,}/).at(-1);
+    assert.deepEqual(evaluateDocument(expr), [expected], line.trim());
+    checked += 1;
+  }
+  assert.ok(checked >= 15, `only ${checked} examples found -- did the format change?`);
+});
+
 test('formatNumber matches Python str()/%.6g formatting', () => {
   // Spot-checks of the formatter itself, including the exponential form that
   // no fixture document happens to reach.

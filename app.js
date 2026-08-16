@@ -89,6 +89,9 @@ filePicker.addEventListener('change', async () => {
 document.getElementById('clear-button').addEventListener('click', clearDocument);
 document.getElementById('open-button').addEventListener('click', () => filePicker.click());
 document.getElementById('save-button').addEventListener('click', saveDocument);
+// The dialog itself handles closing (ESC, and its form-method="dialog" button).
+document.getElementById('syntax-button').addEventListener('click',
+  () => document.getElementById('syntax-help').showModal());
 
 // Ctrl/Cmd+S saves, Ctrl/Cmd+O opens. Clear gets no shortcut on purpose:
 // it is destructive, and the browser reserves the natural key (Ctrl/Cmd+N).
