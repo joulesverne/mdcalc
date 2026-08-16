@@ -1,6 +1,6 @@
 # mdcalc
 
-A Markdown-ish live math notepad, in a single static page: write prose and
+A Markdown-compatible live math notepad, in a single static page: write prose and
 math together, and each math line's result appears in grey alongside it as
 you type. No backend, no build step, no dependencies.
 
@@ -53,6 +53,11 @@ block ES-module loading and fetch over `file://`.)
 **Open…** / **Save** (Ctrl/Cmd+O, Ctrl/Cmd+S) load a document from disk and
 save one back — saves download as `mdcalc.md`. **Clear** empties the
 editor, confirming first if there is anything to lose.
+
+On touch screens the editor uses a 16px font (below that, iOS Safari
+auto-zooms on focus and pushes the results strip off screen), and a
+**Done** button appears in the header while editing — tapping it ends the
+edit and dismisses the keyboard.
 
 ## Testing
 

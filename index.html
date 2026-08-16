@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- interactive-widget=resizes-content: where supported (Android Chrome),
+     the on-screen keyboard shrinks the page instead of covering the bottom
+     of the editor; browsers that don't know the keyword ignore it. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, interactive-widget=resizes-content">
 <title>mdcalc</title>
 <style>
   /*
@@ -30,6 +33,15 @@
     --border: #ddd;
   }
 
+  /* Touch screens get a 16px font, and not only for legibility: iOS Safari
+     auto-zooms the page whenever a focused control's font is smaller than
+     16px, and that zoom is exactly what shoved the grey results strip off
+     the right edge of the screen. At 16px the zoom never triggers, so the
+     strip stays visible while editing. Line height scales to match. */
+  @media (pointer: coarse) {
+    :root { --font-size: 16px; --line-height: 24px; }
+  }
+
   * { box-sizing: border-box; }
 
   html, body {
@@ -40,7 +52,10 @@
     font-family: system-ui, sans-serif;
   }
 
-  body { display: flex; flex-direction: column; }
+  /* 100dvh tracks the *visible* viewport on phones, where 100% can extend
+     under the browser's collapsing URL bar; older browsers skip it and
+     keep the 100% fallback above. */
+  body { display: flex; flex-direction: column; height: 100dvh; }
 
   header {
     display: flex;
@@ -62,6 +77,10 @@
   }
 
   header button:hover { background: #eaeaea; }
+
+  /* Shown only while editing on a touch screen (see app.js); pushed to the
+     far right so it reads as "finish", the way native keyboards place it. */
+  #done-button { margin-left: auto; }
 
   /* The syntax dialog is plain text; everything else is the browser's
      native <dialog> behavior and styling. */
@@ -120,6 +139,10 @@
     <button id="open-button" type="button">Open…</button>
     <button id="save-button" type="button">Save</button>
     <button id="syntax-button" type="button">Syntax</button>
+    <!-- On a phone the textarea fills the whole screen, so once the keyboard
+         is up there is nothing obvious to tap to stop editing. This button
+         appears only then, and only blurs the editor (app.js). -->
+    <button id="done-button" type="button" hidden>Done</button>
     <input id="file-picker" type="file" accept=".md,.txt,.calc,text/plain,text/markdown" hidden>
   </header>
 

@@ -26,7 +26,7 @@ const DOWNLOAD_NAME = 'mdcalc.md';
 // The example doubles as a demo of the prose rule: the Markdown lines show
 // nothing not because they are recognized, but because they don't parse.
 const EXAMPLE = `# Welcome
-This is a Markdown-ish notepad. Prose is ignored; math computes live.
+This is a Markdown-compatible math notepad. Prose is ignored; math computes live.
 
 ## Monthly budget
 - results appear in grey as you type
@@ -111,6 +111,22 @@ input.addEventListener('input', refresh);
 input.addEventListener('scroll', syncScroll);
 window.addEventListener('resize', syncScroll);
 
+/*
+ * Touch-screen editing has no natural exit: the textarea fills the screen,
+ * so once the keyboard is up there is nothing to click "out" to. While the
+ * editor is focused on a touch device, a Done button appears in the header;
+ * tapping it blurs the editor, which is all it takes to dismiss the
+ * keyboard. Desktop is untouched -- there, clicking elsewhere already works
+ * and a flickering header button would just be noise.
+ */
+const touch = matchMedia('(pointer: coarse)').matches;
+const doneButton = document.getElementById('done-button');
+doneButton.addEventListener('click', () => input.blur());
+if (touch) {
+  input.addEventListener('focus', () => { doneButton.hidden = false; });
+  input.addEventListener('blur', () => { doneButton.hidden = true; });
+}
+
 /**
  * Run the shared spec against this build once per open. Pass is silent;
  * any mismatch gets an alert naming the failing cases, so a broken deploy
@@ -132,5 +148,7 @@ async function selfTest() {
 
 input.value = EXAMPLE;
 refresh();
-input.focus();
+// Autofocus is a desktop courtesy only: on a phone it would raise the
+// keyboard over the welcome document before the user has read a word of it.
+if (!touch) input.focus();
 selfTest(); // fire-and-forget: never delays first paint
