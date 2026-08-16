@@ -1,0 +1,11 @@
+{
+  "name": "mdcalc",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A Markdown-ish live math notepad. No runtime or build dependencies; this file exists only to mark the sources as ES modules and to name the test command.",
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "start": "python3 -m http.server 8000"
+  }
+}
