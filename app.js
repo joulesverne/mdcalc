@@ -26,6 +26,14 @@ const filePicker = document.getElementById('file-picker');
 // document. So there is no filename state at all; saves just download as:
 const DOWNLOAD_NAME = 'mdcalc.md';
 
+// The document also lives in localStorage so a reload (or accidental tab
+// close) doesn't destroy it. It is rewritten on every refresh() and read
+// back once at startup; the welcome example appears only when nothing was
+// ever stored (getItem returns null). An intentionally cleared document is
+// stored as '' and stays cleared across reloads rather than resurrecting
+// the welcome text. Everything stays on the user's machine.
+const STORAGE_KEY = 'mdcalc.document';
+
 // The example doubles as a demo of the prose rule: the Markdown lines show
 // nothing not because they are recognized, but because they don't parse.
 const EXAMPLE = `# Welcome
@@ -66,6 +74,9 @@ function refresh() {
     return value + '\n'.repeat(Math.max(0, rows - 1));
   }).join('\n');
   syncScroll();
+  // Persist last: storage can be unavailable (private browsing, blocked
+  // third-party storage), and the editor must keep working without it.
+  try { localStorage.setItem(STORAGE_KEY, input.value); } catch { /* no persistence, that's all */ }
 }
 
 /**
@@ -151,7 +162,11 @@ if (touch) {
   input.addEventListener('blur', () => { doneButton.hidden = true; });
 }
 
-input.value = EXAMPLE;
+// Restore the previous session's document; first-time visitors (or anyone
+// whose storage is unavailable) get the welcome example instead.
+let saved = null;
+try { saved = localStorage.getItem(STORAGE_KEY); } catch { /* fall through to the example */ }
+input.value = saved ?? EXAMPLE;
 refresh();
 // Autofocus is a desktop courtesy only: on a phone it would raise the
 // keyboard over the welcome document before the user has read a word of it.

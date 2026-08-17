@@ -5,7 +5,9 @@ math together, and each math line's result appears in grey alongside it as
 you type. No backend, no build step, no dependencies.
 
 **Live at <https://joulesverne.github.io/mdcalc/>** — everything runs in
-your browser; documents never leave your machine.
+your browser; documents never leave your machine. The document persists
+across reloads via `localStorage` (also local-only); the welcome example
+appears only on a first visit, or when storage is unavailable.
 
 ## What computes, what doesn't
 
