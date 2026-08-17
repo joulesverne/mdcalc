@@ -77,9 +77,12 @@ there is nothing there to get wrong that the evaluator tests don't cover.
 Results are never part of the editable text. They are drawn in a
 non-interactive strip overlaid on the editor's right margin and rebuilt
 wholesale from the evaluator's output on every keystroke — so what you edit
-and what gets evaluated are only ever exactly what you typed. Alignment
-falls out of the layout (both layers share font metrics and line height)
-rather than being computed.
+and what gets evaluated are only ever exactly what you typed. The editor
+soft-wraps at the strip's edge, so text can never disappear underneath it;
+since a wrapped line spans several visual rows, alignment is measured with
+an invisible twin of the textarea (identical font, width, and wrapping)
+whose per-line heights tell the strip how many blank rows to insert. Each
+result sits level with the first row of its line.
 
 - `index.html` — markup and layout
 - `app.js` — UI wiring: recompute, scroll sync, file open/save, touch Done

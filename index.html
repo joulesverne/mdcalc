@@ -9,16 +9,21 @@
 <title>mdcalc</title>
 <style>
   /*
-   * Layout mirrors the desktop build: one editable text area, with each
-   * line's result drawn in grey in a fixed-width strip along the right
-   * edge. The strip is a separate, non-interactive element layered over
-   * the textarea -- results are never inserted into the textarea's value,
-   * so what you edit is only ever what you typed.
+   * Layout: one editable text area, with each line's result drawn in grey
+   * in a fixed-width strip along the right edge. The strip is a separate,
+   * non-interactive element layered over the textarea -- results are never
+   * inserted into the textarea's value, so what you edit is only ever what
+   * you typed.
    *
-   * Alignment is not computed anywhere: the results strip is a single
-   * pre-formatted text block sharing the textarea's font-size, line-height
-   * and top padding, so line N of the strip lands at line N of the text on
-   * its own. That is why these values live in variables used by both.
+   * The editor soft-wraps at the strip's inner edge (its padding-right
+   * reserves the gutter), so typed text can never run underneath the
+   * strip -- on a phone, an unwrapped long line used to disappear behind
+   * it. Wrapping means a document line can occupy several visual rows, so
+   * alignment is measured rather than assumed: #measure is an invisible
+   * twin of the textarea (same font, width, padding and wrapping rules,
+   * one div per document line) that app.js reads to learn each line's
+   * wrapped height, padding the results strip with blank rows to match.
+   * That is why the font metrics live in variables shared by all three.
    */
   :root {
     --font-family: Menlo, Consolas, "DejaVu Sans Mono", monospace;
@@ -88,11 +93,21 @@
 
   .editor { position: relative; flex: 1; min-height: 0; }
 
-  /* The two elements whose metrics must agree for results to line up. */
-  #input, #results-rows {
+  /* The three elements whose metrics must agree for results to line up. */
+  #input, #results-rows, #measure {
     font-family: var(--font-family);
     font-size: var(--font-size);
     line-height: var(--line-height);
+  }
+
+  /* The textarea and its measuring twin must break lines at exactly the
+     same points, so every property that affects wrapping is set here, on
+     both, explicitly. */
+  #input, #measure {
+    padding: var(--pad);
+    padding-right: calc(var(--gutter) + var(--pad)); /* wrap before the strip */
+    white-space: pre-wrap;
+    overflow-wrap: break-word;  /* unbroken runs wrap too, as textareas do */
   }
 
   #input {
@@ -100,18 +115,26 @@
     inset: 0;
     width: 100%;
     height: 100%;
-    padding: var(--pad);
-    /* Keep typed text clear of the results strip rather than letting the
-       two overlap the way the desktop build can. */
-    padding-right: calc(var(--gutter) + var(--pad));
     border: 0;
     outline: none;
     resize: none;
     overflow: auto;
-    white-space: pre;         /* no wrapping: one document line == one row */
     background: var(--surface);
     color: var(--text);
   }
+
+  /* The measuring twin: laid out exactly like the textarea (its width is
+     kept equal to the textarea's clientWidth by app.js, which is how any
+     scrollbar is accounted for) but invisible and inert. min-height keeps
+     empty document lines one row tall, matching the textarea. */
+  #measure {
+    position: absolute;
+    top: 0;
+    left: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+  #measure div { min-height: var(--line-height); }
 
   #results {
     position: absolute;
@@ -121,7 +144,9 @@
     width: calc(var(--gutter) + var(--pad));
     overflow: hidden;
     pointer-events: none;     /* clicks and selection pass through to the text */
-    background: var(--surface); /* hides any long line running underneath */
+    /* Text wraps before it reaches the strip, so nothing legible can sit
+       underneath; the background only masks hanging trailing whitespace. */
+    background: var(--surface);
   }
 
   #results-rows {
@@ -148,11 +173,12 @@
 
   <main class="editor">
     <textarea id="input" spellcheck="false" autocomplete="off"
-              autocapitalize="off" autocorrect="off" wrap="off"></textarea>
+              autocapitalize="off" autocorrect="off"></textarea>
     <!-- aria-hidden: results are decorative echoes of the text being edited,
          and reading them between every line would make the editor unusable
-         with a screen reader. -->
+         with a screen reader; #measure is pure layout instrumentation. -->
     <div id="results" aria-hidden="true"><div id="results-rows"></div></div>
+    <div id="measure" aria-hidden="true"></div>
   </main>
 
   <!-- Native <dialog>: the browser provides open/close, ESC, focus trapping,

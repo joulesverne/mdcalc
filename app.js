@@ -19,6 +19,7 @@ import { evaluateDocument } from './evaluator.js';
 const input = document.getElementById('input');
 const results = document.getElementById('results');
 const resultRows = document.getElementById('results-rows');
+const measure = document.getElementById('measure');
 const filePicker = document.getElementById('file-picker');
 
 // A browser page has no real notion of "the open file" -- the editor is the
@@ -39,12 +40,31 @@ _ * 12              # '_' means "the previous line's result"
 `;
 
 /**
- * Re-evaluate the document and redraw every result. Results are joined
- * with newlines into one pre-formatted block, so blank entries still
- * occupy a line and each result stays level with the line it came from.
+ * Re-evaluate the document and redraw every result.
+ *
+ * The editor soft-wraps, so a document line can occupy several visual
+ * rows and "result N goes on strip row N" no longer holds. Instead of
+ * predicting wrap points (fragile across browsers and fonts), we let the
+ * browser wrap the same text twice: #measure is an invisible twin of the
+ * textarea -- same font, width, padding and wrapping rules, one div per
+ * document line -- so each div's height IS that line's wrapped height.
+ * Each result then sits level with the first visual row of its line, and
+ * blank strip rows are inserted to cover the rest. Rebuilding the whole
+ * twin per keystroke is a single layout pass; trivial at notepad sizes.
  */
 function refresh() {
-  resultRows.textContent = evaluateDocument(input.value).join('\n');
+  const values = evaluateDocument(input.value);
+  measure.style.width = `${input.clientWidth}px`; // excludes any scrollbar
+  measure.replaceChildren(...input.value.split('\n').map((line) => {
+    const row = document.createElement('div');
+    row.textContent = line;
+    return row;
+  }));
+  const rowHeight = parseFloat(getComputedStyle(input).lineHeight);
+  resultRows.textContent = values.map((value, i) => {
+    const rows = Math.round(measure.children[i].offsetHeight / rowHeight);
+    return value + '\n'.repeat(Math.max(0, rows - 1));
+  }).join('\n');
   syncScroll();
 }
 
@@ -111,7 +131,9 @@ document.addEventListener('keydown', (event) => {
 
 input.addEventListener('input', refresh);
 input.addEventListener('scroll', syncScroll);
-window.addEventListener('resize', syncScroll);
+// A width change moves every wrap point, so resizing needs a full
+// re-measure (refresh ends by calling syncScroll anyway).
+window.addEventListener('resize', refresh);
 
 /*
  * Touch-screen editing has no natural exit: the textarea fills the screen,
