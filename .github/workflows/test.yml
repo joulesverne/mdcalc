@@ -1,0 +1,19 @@
+# Runs the behavior spec (fixtures.json, via `npm test` / node --test) on
+# every push and pull request. This replaced the in-browser self-test that
+# used to re-fetch and re-run the whole spec on each page open: the spec is
+# now asserted once per commit here, instead of costing every visitor a
+# fetch plus dozens of evaluations at startup.
+#
+# There is nothing to install -- the project has zero dependencies -- so the
+# job is just checkout, Node, test.
+name: test
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm test

@@ -62,11 +62,12 @@ edit and dismisses the keyboard.
 ## Testing
 
 The spec is [`fixtures.json`](fixtures.json): documents and their expected
-per-line results. It is asserted twice —
-
-- `npm test` runs it through Node's built-in test runner (nothing to install)
-- the app itself re-runs every case on each open; passing is silent, any
-  failure raises an alert naming the broken cases
+per-line results. `npm test` runs it through Node's built-in test runner
+(nothing to install), and a GitHub Actions workflow
+([`.github/workflows/test.yml`](.github/workflows/test.yml)) runs the same
+command on every push and pull request — so correctness is asserted at
+commit time rather than by re-running the spec in every visitor's browser
+at startup.
 
 The UI layer is deliberately untested: it holds no state of its own, so
 there is nothing there to get wrong that the evaluator tests don't cover.
@@ -81,7 +82,7 @@ falls out of the layout (both layers share font metrics and line height)
 rather than being computed.
 
 - `index.html` — markup and layout
-- `app.js` — UI wiring: recompute, scroll sync, file open/save, self-test
+- `app.js` — UI wiring: recompute, scroll sync, file open/save, touch Done
 - `evaluator.js` — the language: a hand-written parser (no `eval()`), which
   is what makes the non-JS semantics above exact rather than approximated
 - `fixtures.json` — the behavior spec

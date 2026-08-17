@@ -3,8 +3,10 @@
  *
  * Deliberately thin: all the real logic is in evaluator.js. This file only
  * wires up five things -- recompute on edit, keep the results strip
- * scrolled with the text, load a file from disk, save one back, and run
- * the fixtures.json spec once on open (silent unless something fails).
+ * scrolled with the text, load a file from disk, save one back, and give
+ * touch screens a Done button for ending an edit. Correctness of the math
+ * itself is asserted by CI (npm test over fixtures.json) at commit time,
+ * not here at runtime, so startup does no work beyond the first render.
  *
  * The results strip holds no state of its own. It is rewritten wholesale
  * from the evaluator's output on every change, which is what keeps it
@@ -127,28 +129,8 @@ if (touch) {
   input.addEventListener('blur', () => { doneButton.hidden = true; });
 }
 
-/**
- * Run the shared spec against this build once per open. Pass is silent;
- * any mismatch gets an alert naming the failing cases, so a broken deploy
- * announces itself instead of quietly miscalculating someone's math.
- */
-async function selfTest() {
-  try {
-    const { cases } = await (await fetch('fixtures.json')).json();
-    const failed = cases.filter(
-      (c) => evaluateDocument(c.document).join('\n') !== c.expected.join('\n'));
-    if (failed.length > 0) {
-      alert(`mdcalc self-test: ${failed.length} of ${cases.length} checks FAILED --\n`
-        + `results may be wrong.\n\n${failed.map((c) => c.name).join('\n')}`);
-    }
-  } catch (err) {
-    console.warn('mdcalc self-test could not run:', err); // fetch blocked (e.g. file://)
-  }
-}
-
 input.value = EXAMPLE;
 refresh();
 // Autofocus is a desktop courtesy only: on a phone it would raise the
 // keyboard over the welcome document before the user has read a word of it.
 if (!touch) input.focus();
-selfTest(); // fire-and-forget: never delays first paint
