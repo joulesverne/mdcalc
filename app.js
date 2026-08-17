@@ -26,12 +26,21 @@ const filePicker = document.getElementById('file-picker');
 // document. So there is no filename state at all; saves just download as:
 const DOWNLOAD_NAME = 'mdcalc.md';
 
-// The document also lives in localStorage so a reload (or accidental tab
-// close) doesn't destroy it. It is rewritten on every refresh() and read
-// back once at startup; the welcome example appears only when nothing was
-// ever stored (getItem returns null). An intentionally cleared document is
-// stored as '' and stays cleared across reloads rather than resurrecting
-// the welcome text. Everything stays on the user's machine.
+// The document is persisted at two levels, both written on every refresh()
+// and read once at startup, with everything staying on the user's machine:
+//
+// - sessionStorage is the tab's own copy. The browser scopes it per tab
+//   and keeps it across reloads, so each tab is its own document and
+//   reloading one never picks up another tab's text. (This is why no
+//   explicit tab ID exists: sessionStorage IS the per-tab namespace, with
+//   no ID bookkeeping and no stale per-tab keys accumulating.)
+// - localStorage is the shared "most recently edited" copy. It is read
+//   only when this tab has no copy of its own -- a brand-new tab, or a
+//   full browser restart -- so concurrent tabs overwrite it harmlessly.
+//
+// The welcome example appears only when neither level has anything (a
+// first visit). An intentionally cleared document is stored as '' and so
+// stays cleared across reloads rather than resurrecting the welcome text.
 const STORAGE_KEY = 'mdcalc.document';
 
 // The example doubles as a demo of the prose rule: the Markdown lines show
@@ -76,7 +85,10 @@ function refresh() {
   syncScroll();
   // Persist last: storage can be unavailable (private browsing, blocked
   // third-party storage), and the editor must keep working without it.
-  try { localStorage.setItem(STORAGE_KEY, input.value); } catch { /* no persistence, that's all */ }
+  try {
+    sessionStorage.setItem(STORAGE_KEY, input.value); // this tab's document
+    localStorage.setItem(STORAGE_KEY, input.value);   // seed for new tabs
+  } catch { /* no persistence, that's all */ }
 }
 
 /**
@@ -162,10 +174,13 @@ if (touch) {
   input.addEventListener('blur', () => { doneButton.hidden = true; });
 }
 
-// Restore the previous session's document; first-time visitors (or anyone
-// whose storage is unavailable) get the welcome example instead.
+// Restore this tab's own document first, then fall back to the shared
+// most-recent copy (new tab, or browser restart); first-time visitors (or
+// anyone whose storage is unavailable) get the welcome example instead.
 let saved = null;
-try { saved = localStorage.getItem(STORAGE_KEY); } catch { /* fall through to the example */ }
+try {
+  saved = sessionStorage.getItem(STORAGE_KEY) ?? localStorage.getItem(STORAGE_KEY);
+} catch { /* fall through to the example */ }
 input.value = saved ?? EXAMPLE;
 refresh();
 // Autofocus is a desktop courtesy only: on a phone it would raise the

@@ -6,8 +6,11 @@ you type. No backend, no build step, no dependencies.
 
 **Live at <https://joulesverne.github.io/mdcalc/>** — everything runs in
 your browser; documents never leave your machine. The document persists
-across reloads via `localStorage` (also local-only); the welcome example
-appears only on a first visit, or when storage is unavailable.
+across reloads (also local-only): each tab keeps its own document in
+`sessionStorage`, so parallel tabs don't overwrite each other, while
+`localStorage` holds the most recently edited copy to seed new tabs and
+survive browser restarts. The welcome example appears only on a first
+visit, or when storage is unavailable.
 
 ## What computes, what doesn't
 
